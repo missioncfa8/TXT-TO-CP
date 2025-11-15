@@ -151,7 +151,7 @@ async def broadcast_handler(client: Client, message: Message):
                     caption=message.reply_to_message.caption or ""
                 )
             else:
-                await client.forward_messages(user_id, message.chat.id, message.reply_to_message.message_id)
+                await client.forward_messages(user_id, message.chat.id, message.reply_to_message.id)
 
             success += 1
         except (FloodWait, PeerIdInvalid, UserIsBlocked, InputUserDeactivated):
@@ -176,10 +176,18 @@ async def broadusers_handler(client: Client, message: Message):
     for user_id in list(set(TOTAL_USERS)):
         try:
             user = await client.get_users(int(user_id))
-            fname = user.first_name if user.first_name else " "
-            user_infos.append(f"[{user.id}](tg://openmessage?user_id={user.id}) | `{fname}`")
+            # Handle case where get_users might return a list
+            if isinstance(user, list) and len(user) > 0:
+                user = user[0]  # Get the first user if a list is returned
+            # Check if user has the required attributes
+            if hasattr(user, 'first_name') and hasattr(user, 'id'):
+                fname = user.first_name if user.first_name else " "
+                user_infos.append(f"[{user.id}](tg://openmessage?user_id={user.id}) | `{fname}`")
+            else:
+                user_infos.append(f"[{user_id}](tg://openmessage?user_id={user_id})")
         except Exception:
-            user_infos.append(f"[{user.id}](tg://openmessage?user_id={user.id})")
+            # Handle case where user might not be defined due to exception
+            user_infos.append(f"[{user_id}](tg://openmessage?user_id={user_id})")
 
     total = len(user_infos)
     text = (
@@ -388,7 +396,6 @@ async def txt_handler(bot: Client, m: Message):
         os.remove(x)
         return
 
-  
     await editable.edit(f"🔹**ᴛᴏᴛᴀʟ 🔗 ʟɪɴᴋs ғᴏᴜɴᴅ ᴀʀᴇ --__{len(links)}__--\n🔹sᴇɴᴅ ғʀᴏᴍ ᴡʜᴇʀᴇ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴅᴏᴡɴʟᴏᴀᴅ**")
     try:
         input0: Message = await bot.listen(editable.chat.id, timeout=10)
