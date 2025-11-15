@@ -2,9 +2,26 @@ import random #NIKHIL SAINI BOTS
 import time #NIKHIL SAINI BOTS
 import math #NIKHIL SAINI BOTS
 import os #NIKHIL SAINI BOTS
+import re #NIKHIL SAINI BOTS
 from vars import CREDIT #NIKHIL SAINI BOTS
 from pyrogram.errors import FloodWait #NIKHIL SAINI BOTS
 from datetime import datetime,timedelta #NIKHIL SAINI BOTS
+
+def sanitize_filename(filename):
+    """Sanitize filename to remove problematic characters"""
+    # Remove or replace problematic characters
+    filename = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', filename)
+    # Replace multiple spaces with single space
+    filename = re.sub(r'\s+', ' ', filename)
+    # Strip leading/trailing whitespace
+    filename = filename.strip()
+    # Ensure filename is not empty
+    if not filename:
+        filename = "unnamed_file"
+    # Limit filename length (keeping space for extension)
+    if len(filename) > 150:
+        filename = filename[:150]
+    return filename
 
 class Timer: #NIKHIL SAINI BOTS
     def __init__(self, time_between=5): #NIKHIL SAINI BOTS
