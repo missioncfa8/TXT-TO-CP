@@ -8,7 +8,7 @@ API_HASH = "18c3760d602be96b599fa42f1c322956"
 BOT_TOKEN = "8348577322:AAHOpd-XLXdVpBl3eC_d6iKyt_nNQ6sDXaQ"
 
 OWNER = 915101089
-CREDIT = environ.get("CREDIT", "Unknown")
+CREDIT = "SAINI BOTS"  # Set a proper default value instead of "Unknown"
 
 TOTAL_USER = os.environ.get('TOTAL_USERS', '').split(',')
 TOTAL_USERS = [int(user_id) for user_id in TOTAL_USER if user_id.strip()]
