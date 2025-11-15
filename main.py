@@ -30,6 +30,8 @@ from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 import aiohttp
 import aiofiles
 import shutil
+from typing import cast
+
 
 # Initialize the bot
 bot = Client(
@@ -298,14 +300,14 @@ async def youtube_to_txt(client, message: Message):
     result = None
     try:
         import yt_dlp
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            result = ydl.extract_info(youtube_link, download=False)
-            if isinstance(result, dict) and "entries" in result:
-                title = result.get("title", "youtube_playlist")
-            elif isinstance(result, dict):
-                title = result.get("title", "youtube_video")
-            else:
-                title = "youtube_content"
+        ydl = yt_dlp.YoutubeDL(ydl_opts)  # type: ignore
+        result = ydl.extract_info(youtube_link, download=False)
+        if isinstance(result, dict) and "entries" in result:
+            title = result.get("title", "youtube_playlist")
+        elif isinstance(result, dict):
+            title = result.get("title", "youtube_video")
+        else:
+            title = "youtube_content"
     except Exception as e:
         await message.reply_text(
             f"<blockquote>{str(e)}</blockquote>"
@@ -316,8 +318,8 @@ async def youtube_to_txt(client, message: Message):
     videos = []
     if result is not None and isinstance(result, dict) and "entries" in result:
         entries = result.get("entries", [])
-        if isinstance(entries, list):
-            for entry in entries:
+        if isinstance(entries, list) and entries is not None:
+            for entry in entries:  # type: ignore
                 if isinstance(entry, dict):
                     video_title = entry.get("title", "No title")
                     url = entry.get("url", "")
@@ -333,6 +335,7 @@ async def youtube_to_txt(client, message: Message):
     txt_file = os.path.join("downloads", f"{title}.txt")
     os.makedirs(os.path.dirname(txt_file), exist_ok=True)  # Ensure the directory exists
     with open(txt_file, "w") as f:
+
         f.write("\n".join(videos))
 
     # Send the generated text file to the user with a pretty caption
@@ -790,14 +793,6 @@ async def custom_name_button(client, callback_query):
     ),
     reply_markup=keyboard
   )
-import asyncio
-
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
-
-bot = Client("bot")
-
-
 @bot.on_callback_query(filters.regex("titlle_command"))
 async def title_feature_button(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
@@ -1142,11 +1137,18 @@ async def txt_handler(bot: Client, m: Message):
             # Also sanitize the final name to ensure it's safe for command line usage
             name = helper.sanitize_filename(name)
             
+            # Initialize variables that might be used later
+            appxkey = ""
+            mpd = ""
+            keys_string = ""
+            
             if "visionias" in url:
                 async with ClientSession() as session:
                     async with session.get(url, headers={'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'Accept-Language': 'en-US,en;q=0.9', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'Pragma': 'no-cache', 'Referer': 'http://www.visionias.in/', 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Site': 'cross-site', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Linux; Android 12; RMX2121) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36', 'sec-ch-ua': '"Chromium";v="107", "Not=A?Brand";v="24"', 'sec-ch-ua-mobile': '?1', 'sec-ch-ua-platform': '"Android"',}) as resp:
                         text = await resp.text()
-                        url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
+                        match = re.search(r"(https://.*?playlist.m3u8.*?)\"", text)
+                        if match:
+                            url = match.group(1)
 
             if "acecwply" in url:
                 cmd = f'yt-dlp -o "{name}.%(ext)s" -f "bestvideo[height<={raw_text2}]+bestaudio" --hls-prefer-ffmpeg --no-keep-video --remux-video mkv --no-warning "{url}"'
@@ -1239,7 +1241,7 @@ async def txt_handler(bot: Client, m: Message):
                         os.remove(ka)
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        await asyncio.sleep(e.value)
+                        await asyncio.sleep(int(getattr(e, 'value', 1)))
                         continue    
 
                 elif ".pdf" in url:
@@ -1297,7 +1299,7 @@ async def txt_handler(bot: Client, m: Message):
                             os.remove(f'{name}.pdf')
                         except FloodWait as e:
                             await m.reply_text(str(e))
-                            await asyncio.sleep(e.value)
+                            await asyncio.sleep(int(getattr(e, 'value', 1)))
                             continue    
 
                 elif ".ws" in url and  url.endswith(".ws"):
@@ -1314,7 +1316,7 @@ async def txt_handler(bot: Client, m: Message):
                         count += 1
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        await asyncio.sleep(e.value)
+                        await asyncio.sleep(int(getattr(e, 'value', 1)))
                         continue    
 
                 elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
@@ -1333,7 +1335,7 @@ async def txt_handler(bot: Client, m: Message):
                         os.remove(f'{name}.{ext}')
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        await asyncio.sleep(e.value)
+                        await asyncio.sleep(int(getattr(e, 'value', 1)))
                         continue    
 
                 elif 'encrypted.m' in url:    
@@ -1459,7 +1461,7 @@ async def txt_handler(bot: Client, m: Message):
                 continue
 
     except Exception as e:
-        await m.reply_text(e)
+        await m.reply_text(str(e))
         time.sleep(2)
 
     success_count = len(links) - failed_count
@@ -1492,7 +1494,10 @@ async def text_handler(bot: Client, m: Message):
     await m.delete()
 
     await editable.edit(f"╭━━━━❰ᴇɴᴛᴇʀ ʀᴇꜱᴏʟᴜᴛɪᴏɴ❱━━➣ \n┣━━⪼ send `144`  for 144p\n┣━━⪼ send `240`  for 240p\n┣━━⪼ send `360`  for 360p\n┣━━⪼ send `480`  for 480p\n┣━━⪼ send `720`  for 720p\n┣━━⪼ send `1080` for 1080p\n╰━━⌈⚡[`{CREDIT}`]⚡⌋━━➣ ")
-    input2: Message = await bot.listen(filters=filters.text & filters.user(m.from_user.id) & filters.chat(editable.chat.id))
+    input2 = await bot.listen(filters=filters.text & filters.user(m.from_user.id) & filters.chat(editable.chat.id))
+    if input2 is None:
+        await m.reply_text("**No input received.**")
+        return
     raw_text2 = input2.text
     quality = f"{raw_text2}p"
     await input2.delete(True)
@@ -1520,6 +1525,13 @@ async def text_handler(bot: Client, m: Message):
     count =0
     arg =1
     channel_id = m.chat.id
+    
+    # Initialize variables that might be used later
+    appxkey = ""
+    mpd = ""
+    keys_string = ""
+    failed_count = 0
+    
     try:
             Vxy = link.replace("file/d/","uc?export=download&id=").replace("www.youtube-nocookie.com/embed", "youtu.be").replace("?modestbranding=1", "").replace("/view?usp=sharing","")
             url = Vxy
@@ -1531,7 +1543,9 @@ async def text_handler(bot: Client, m: Message):
                 async with ClientSession() as session:
                     async with session.get(url, headers={'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'Accept-Language': 'en-US,en;q=0.9', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'Pragma': 'no-cache', 'Referer': 'http://www.visionias.in/', 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Site': 'cross-site', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Linux; Android 12; RMX2121) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36', 'sec-ch-ua': '"Chromium";v="107", "Not=A?Brand";v="24"', 'sec-ch-ua-mobile': '?1', 'sec-ch-ua-platform': '"Android"',}) as resp:
                         text = await resp.text()
-                        url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
+                        match = re.search(r"(https://.*?playlist.m3u8.*?)\"", text)
+                        if match:
+                            url = match.group(1)
 
             if "acecwply" in url:
                 cmd = f'yt-dlp -o "{name}.%(ext)s" -f "bestvideo[height<={raw_text2}]+bestaudio" --hls-prefer-ffmpeg --no-keep-video --remux-video mkv --no-warning "{url}"'
@@ -1595,16 +1609,10 @@ async def text_handler(bot: Client, m: Message):
             else:
                 cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
 
-            try:
-                cc = f'🎞️𝐓𝐢𝐭𝐥𝐞 » `{name} [{res}].mp4`\n🔗𝐋𝐢𝐧𝐤 » <a href="{link}">__**CLICK HERE**__</a>\n\n🌟𝐄𝐱𝐭𝐫𝐚𝐜𝐭𝐞𝐝 𝐁𝐲 » `{CREDIT}`'
-                cc1 = f'📕𝐓𝐢𝐭𝐥𝐞 » `{name}`\n🔗𝐋𝐢𝐧𝐤 » <a href="{link}">__**CLICK HERE**__</a>\n\n🌟𝐄𝐱𝐭𝐫𝐚𝐜𝐭𝐞𝐝 𝐁𝐲 » `{CREDIT}`'
-                  
-
-            except Exception as e:
-                await bot.send_message(channel_id, f'⚠️**Downloading Failed**⚠️\n**Name** =>> `{str(count).zfill(3)} {name1}`\n**Url** =>> {url}\n\n<blockquote><i><b>Failed Reason: {str(e)}</b></i></blockquote>', disable_web_page_preview=True)
-                count += 1
-                failed_count += 1
-                continue
+            # Initialize caption variables before the try block
+            cc = f'🎞️𝐓𝐢𝐭𝐥𝐞 » `{name} [{res}].mp4`\n🔗𝐋𝐢𝐧𝐤 » <a href="{link}">__**CLICK HERE**__</a>\n\n🌟𝐄𝐱𝐭𝐫𝐚𝐜𝐭𝐞𝐝 𝐁𝐲 » `{CREDIT}`'
+            cc = f'🎞️𝐓𝐢𝐭𝐥𝐞 » `{name} [{res}].mp4`\n🔗𝐋𝐢𝐧𝐤 » <a href="{link}">__**CLICK HERE**__</a>\n\n🌟𝐄𝐱𝐭𝐫𝐚𝐜𝐭𝐞𝐝 𝐁𝐲 » `{CREDIT}`'
+            cc1 = f'📕𝐓𝐢𝐭𝐥𝐞 » `{name}`\n🔗𝐋𝐢𝐧𝐤 » <a href="{link}">__**CLICK HERE**__</a>\n\n🌟𝐄𝐱𝐭𝐫𝐚𝐜𝐭𝐞𝐝 𝐁𝐲 » `{CREDIT}`'
 
             # Handle PDF files
             if ".pdf" in url:
@@ -1619,23 +1627,14 @@ async def text_handler(bot: Client, m: Message):
                         break  # Success, exit retry loop
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        await asyncio.sleep(e.value)
+                        await asyncio.sleep(int(getattr(e, 'value', 1)))
                         continue
                     except Exception as e:
                         if attempt == max_retries - 1:  # Last attempt failed
                             # Send the final failure message if all retries fail
-                            await m.reply_text(f"Failed to download PDF after {max_retries} attempts.\n⚠️**Downloading Failed**⚠️\n**Name** =>> {str(count).zfill(3)} {name1}\n**Url** =>> {url}", disable_web_page_preview)
+                            await m.reply_text(f"Failed to download PDF after {max_retries} attempts.\n⚠️**Downloading Failed**⚠️\n**Name** =>> {str(count).zfill(3)} {name1}\n**Url** =>> {url}")
                         continue
-                else:
-                    try:
-                        cmd = f'yt-dlp -o "{name}.pdf" "{url}"'
-                        download_cmd = f"{cmd} -R 25 --fragment-retries 25"
-                        os.system(download_cmd)
-                        copy = await bot.send_document(chat_id=m.chat.id, document=f'{name}.pdf', caption=cc1)
-                        os.remove(f'{name}.pdf')
-                    except FloodWait as e:
-                        await m.reply_text(str(e))
-                        await asyncio.sleep(e.value)
+
                         pass   
 
             try:
@@ -1649,7 +1648,7 @@ async def text_handler(bot: Client, m: Message):
                         os.remove(f'{name}.{ext}')
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        await asyncio.sleep(e.value)
+                        await asyncio.sleep(int(getattr(e, 'value', 1)))
                         pass
 
                 elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
@@ -1663,7 +1662,7 @@ async def text_handler(bot: Client, m: Message):
                         os.remove(f'{name}.{ext}')
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        await asyncio.sleep(e.value)
+                        await asyncio.sleep(int(getattr(e, 'value', 1)))
                         pass
                                 
                 elif 'encrypted.m' in url:    
@@ -1708,60 +1707,5 @@ async def text_handler(bot: Client, m: Message):
     except Exception as e:
         await m.reply_text(str(e))
 
-#...............…........
-def notify_owner():
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    data = {
-        "chat_id": OWNER,
-import requests
-from pyrogram import Client, filters
-
-BOT_TOKEN = "YOUR_BOT_TOKEN"
-OWNER = "YOUR_OWNER_ID"
-
-bot = Client("bot", bot_token=BOT_TOKEN)
-
-
-def notify_owner():
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    data = {
-        "chat_id": OWNER,
-        "text": "𝐁𝐨𝐭 𝐑𝐞𝐬𝐚𝐭 𝐒𝐮𝐜𝐜𝐞𝐬𝐬𝐟𝐮𝐥𝐥𝐲 ✅"
-    }
-    requests.post(url, data=data)
-
-
-def reset_and_set_commands():
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/setMyCommands"
-    # Reset
-    requests.post(url, json={"commands": []})
-    # Set new
-    commands = [
-        {"command": "start", "description": "✅ Check Alive the Bot"},
-        {"command": "stop", "description": "🚫 Stop the ongoing process"},
-        {"command": "broadcast", "description": "📢 Broadcast to All Users"},
-        {"command": "broadusers", "description": "👨‍❤️‍👨 All Broadcasting Users"},
-        {"command": "help", "description": "👨‍🏭 Help about the Bot"},
-        {"command": "drm", "description": "📑 Upload .txt file"},
-        {"command": "cookies", "description": "📁 Upload YT Cookies"},
-        {"command": "y2t", "description": "🔪 YouTube → .txt Converter"},
-        {"command": "ytm", "description": "🎶 YT .txt → .mp3 downloader"},
-        {"command": "yt2m", "description": "🎵 YT link → .mp3 downloader"},
-        {"command": "t2t", "description": "📟 Text → .txt Generator"},
-        {"command": "resat", "description": "✅ Resat the Bot"},
-        {"command": "id", "description": "🆔 Get Your ID"},
-        {"command": "info", "description": "ℹ️ Check Your Information"},
-        {"command": "logs", "description": "👁️ View Bot Activity"},
-        {"command": "addauth", "description": "▶️ Add Authorisation"},
-        {"command": "rmauth", "description": "⏸️ Remove Authorisation "},
-        {"command": "users", "description": "👨‍👨‍👧‍👦 All Premium Users"}
-    ]
-    requests.post(url, json={"commands": commands})
-
-
 if __name__ == "__main__":
-    reset_and_set_commands()
-    notify_owner() 
-
-
-bot.run()
+    bot.run()
