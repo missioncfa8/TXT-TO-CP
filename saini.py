@@ -21,6 +21,22 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from base64 import b64decode
 
+def sanitize_filename(filename):
+    """Sanitize filename to remove problematic characters"""
+    # Remove or replace problematic characters
+    filename = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', filename)
+    # Replace multiple spaces with single space
+    filename = re.sub(r'\s+', ' ', filename)
+    # Strip leading/trailing whitespace
+    filename = filename.strip()
+    # Ensure filename is not empty
+    if not filename:
+        filename = "unnamed_file"
+    # Limit filename length (keeping space for extension)
+    if len(filename) > 150:
+        filename = filename[:150]
+    return filename
+
 def duration(filename):
     result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
                              "format=duration", "-of",
