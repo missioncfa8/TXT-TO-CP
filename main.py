@@ -1258,27 +1258,6 @@ async def txt_handler(bot: Client, m: Message):
                         time.sleep(e.x)
                         continue    
 
-                elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
-                    try:
-                        ext = url.split('.')[-1]
-                        cmd = f'yt-dlp -o "{name}.{ext}" "{url}"'
-                        download_cmd = f"{cmd} -R 25 --fragment-retries 25"
-                        os.system(download_cmd)
-                        try:
-                            copy = await bot.send_photo(chat_id=channel_id, photo=f'{name}.{ext}', caption=ccimg)
-                        except Exception as send_error:
-                            await m.reply_text(f"**Failed to send image to channel. Error: {str(send_error)}**")
-                            os.remove(f'{name}.{ext}')
-                            continue
-                        count += 1
-                        os.remove(f'{name}.{ext}')
-                    except FloodWait as e:
-                        await m.reply_text(str(e))
-                        time.sleep(e.x)
-                        continue    
-                except Exception as e:
-                    pass   
-
                 elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
                     try:
                         ext = url.split('.')[-1]
