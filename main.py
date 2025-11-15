@@ -1276,6 +1276,8 @@ async def txt_handler(bot: Client, m: Message):
                         await m.reply_text(str(e))
                         time.sleep(e.x)
                         continue    
+                except Exception as e:
+                    pass   
 
                 elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
                     try:
@@ -1598,7 +1600,7 @@ async def text_handler(bot: Client, m: Message):
                         time.sleep(e.x)
                         pass   
 
-                elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
+                if any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
                     try:
                         ext = url.split('.')[-1]
                         cmd = f'yt-dlp -x --audio-format {ext} -o "{name}.{ext}" "{url}"'
