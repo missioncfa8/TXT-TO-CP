@@ -9,8 +9,8 @@ from datetime import datetime,timedelta #NIKHIL SAINI BOTS
 
 def sanitize_filename(filename):
     """Sanitize filename to remove problematic characters"""
-    # Remove or replace problematic characters
-    filename = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', filename)
+    # Remove or replace problematic characters including square brackets
+    filename = re.sub(r'[<>:"/\\|?*\x00-\x1f\[\]]', '', filename)
     # Replace multiple spaces with single space
     filename = re.sub(r'\s+', ' ', filename)
     # Strip leading/trailing whitespace
