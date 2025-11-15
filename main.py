@@ -1579,6 +1579,7 @@ async def text_handler(bot: Client, m: Message):
                         time.sleep(e.x)
                         pass   
 
+            try:
                 if any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
                     try:
                         ext = url.split('.')[-1]
