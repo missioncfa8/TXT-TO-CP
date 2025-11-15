@@ -3,12 +3,12 @@
 import os
 from os import environ
 
-API_ID = 22984163
-API_HASH = "18c3760d602be96b599fa42f1c322956"
-BOT_TOKEN = "8348577322:AAHOpd-XLXdVpBl3eC_d6iKyt_nNQ6sDXaQ"
+API_ID = int(os.environ.get("API_ID", 22984163))
+API_HASH = os.environ.get("API_HASH", "18c3760d602be96b599fa42f1c322956")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8348577322:AAHOpd-XLXdVpBl3eC_d6iKyt_nNQ6sDXaQ")
 
-OWNER = 915101089
-CREDIT = "SAINI BOTS"  # Set a proper default value instead of "Unknown"
+OWNER = int(os.environ.get("OWNER", 915101089))
+CREDIT = os.environ.get("CREDIT", "SAINI BOTS")  # Set a proper default value instead of "Unknown"
 
 TOTAL_USER = os.environ.get('TOTAL_USERS', '').split(',')
 TOTAL_USERS = [int(user_id) for user_id in TOTAL_USER if user_id.strip()]

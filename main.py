@@ -3,7 +3,6 @@ import re
 import sys
 import json
 import time
-import pytz
 import asyncio
 import requests
 import subprocess
@@ -32,11 +31,14 @@ import aiofiles
 import shutil
 from typing import cast
 
-
 # Initialize the bot
 bot = Client(
     "bot",
     api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN
+)
+
     api_hash=API_HASH,
     bot_token=BOT_TOKEN
 )
