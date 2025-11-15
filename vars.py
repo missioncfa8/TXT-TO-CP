@@ -7,14 +7,14 @@ API_ID = 22984163
 API_HASH = "18c3760d602be96b599fa42f1c322956"
 BOT_TOKEN = "8348577322:AAHOpd-XLXdVpBl3eC_d6iKyt_nNQ6sDXaQ"
 
-OWNER = int(environ.get("OWNER", "0"))
+OWNER = 915101089
 CREDIT = environ.get("CREDIT", "Unknown")
 
 TOTAL_USER = os.environ.get('TOTAL_USERS', '').split(',')
-TOTAL_USERS = [int(user_id) for user_id in TOTAL_USER]
+TOTAL_USERS = [int(user_id) for user_id in TOTAL_USER if user_id.strip()]
 
 AUTH_USER = os.environ.get('AUTH_USERS', '').split(',')
-AUTH_USERS = [int(user_id) for user_id in AUTH_USER]
+AUTH_USERS = [int(user_id) for user_id in AUTH_USER if user_id.strip()]
 if int(OWNER) not in AUTH_USERS:
     AUTH_USERS.append(int(OWNER))
   
