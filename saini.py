@@ -230,6 +230,7 @@ def old_download(url, file_name, chunk_size = 1024 * 10):
 
 
 def human_readable_size(size, decimal_places=2):
+    unit = 'B'
     for unit in ['B', 'KB', 'MB', 'GB', 'TB', 'PB']:
         if size < 1024.0 or unit == 'PB':
             break
@@ -247,6 +248,7 @@ def time_name():
 async def download_video(url,cmd, name):
     download_cmd = f'{cmd} -R 25 --fragment-retries 25 --external-downloader aria2c --downloader-args "aria2c: -x 16 -j 32"'
     global failed_counter
+    failed_counter = 0
     print(download_cmd)
     logging.info(download_cmd)
     k = subprocess.run(download_cmd, shell=True)
@@ -270,14 +272,14 @@ async def download_video(url,cmd, name):
 
         return name
     except FileNotFoundError as exc:
-        return os.path.isfile.splitext[0] + "." + "mp4"
+        return os.path.splitext(name)[0] + "." + "mp4"
 
 
 async def send_doc(bot: Client, m: Message, cc, ka, cc1, prog, count, name, channel_id):
     reply = await bot.send_message(channel_id, f"Downloading pdf:\n<pre><code>{name}</code></pre>")
     time.sleep(1)
     start_time = time.time()
-    await bot.send_document(ka, caption=cc1)
+    await bot.send_document(chat_id=channel_id, document=ka, caption=cc1)
     count+=1
     await reply.delete (True)
     time.sleep(1)
@@ -313,6 +315,7 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog, cha
     await prog.delete (True)
     reply1 = await bot.send_message(channel_id, f"**📩 Uploading Video 📩:-**\n<blockquote>**{name}**</blockquote>")
     reply = await m.reply_text(f"**Generate Thumbnail:**\n<blockquote>**{name}**</blockquote>")
+    thumbnail = None
     try:
         if thumb == "/d":
             thumbnail = f"{filename}.jpg"
@@ -321,6 +324,10 @@ async def send_vid(bot: Client, m: Message, cc, filename, thumb, name, prog, cha
             
     except Exception as e:
         await m.reply_text(str(e))
+    
+    # Set a default thumbnail if none was provided or generated
+    if thumbnail is None:
+        thumbnail = f"{filename}.jpg"
       
     dur = int(duration(filename))
     start_time = time.time()
