@@ -1,9 +1,9 @@
 <h1 align="center">
-  ✨ SAINI DRM Bot ✨
+  ✨ AMAN DRM Bot ✨
 </h1>
 
 <p align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=18&pause=1000&color=00F7FF&center=true&vCenter=true&width=435&lines=Welcome+to+DRM+Bot+by+@nikhil.saini.khe" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=18&pause=1000&color=00F7FF&center=true&vCenter=true&width=435&lines=Welcome+to+DRM+Bot+by+@aman2004_xd" alt="Typing SVG" />
 </p>
 
 ---
@@ -46,16 +46,15 @@
 
 ## 🤖 Bot Usernames
 
-- [@saini_contact_bot](https://t.me/saini_contact_bot)
-- [@saini_file_store_bot](https://t.me/saini_file_store_bot)
+- [@aman2004_xd](https://t.me/aman2004_xd)
+- [@abcpvtbot](https://t.me/aman2004_xd)
 
 ---
 
 ## 📂 Original Repositories
 
-- 🔗 [nikhilsainiop/saini-txt-direct](https://github.com/nikhilsainiop/saini-txt-direct)
-- 🔗 [cyberseller999/saini-txt-direct](https://github.com/cyberseller999/saini-txt-direct)
+- 🔗 [nikhilsainiop/saini-txt-direct](https://github.com/missioncfa8/txt-to-cp)
 
 ---
 
-> 👨‍💻 Created with ❤️ by [@nikhil.saini.khe](https://instagram.com/nikhil.saini.khe)
+> 👨‍💻 Created with ❤️ by [@aman2004_xd](https://t.me/aman2004_xd)
