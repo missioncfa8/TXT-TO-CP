@@ -1025,6 +1025,7 @@ async def drm_handler(bot: Client, m: Message):
     except asyncio.TimeoutError:
         raw_text3 = '/d'
         
+    PRENAME = ""  # Initialize PRENAME to avoid unbound variable error
     if raw_text3 == '/d':
         CR = f"{CREDIT}"
     elif "," in raw_text3:
@@ -1034,7 +1035,11 @@ async def drm_handler(bot: Client, m: Message):
 
     await editable.edit("**Enter 𝐏𝐖/𝐂𝐖/𝐂𝐏 Working Token For 𝐌𝐏𝐃 𝐔𝐑𝐋 or send /d**")
     try:
-        input4: Message = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
+        input4_msg = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
+        if input4_msg is None:
+            await m.reply_text("**No input received. Please try again.**")
+            return
+        input4: Message = input4_msg
         raw_text4 = input4.text
         await input4.delete(True)
     except asyncio.TimeoutError:
@@ -1051,7 +1056,11 @@ async def drm_handler(bot: Client, m: Message):
         
     await editable.edit(f"**Send the Video Thumb URL or send /d**")
     try:
-        input6: Message = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
+        input6_msg = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
+        if input6_msg is None:
+            await m.reply_text("**No input received. Please try again.**")
+            return
+        input6: Message = input6_msg
         raw_text6 = input6.text
         await input6.delete(True)
     except asyncio.TimeoutError:
@@ -1066,7 +1075,11 @@ async def drm_handler(bot: Client, m: Message):
 
     await editable.edit("__**⚠️Provide the Channel ID or send /d__\n\n<blockquote><i>🔹 Make me an admin to upload.\n🔸Send /id in your channel to get the Channel ID.\n\nExample: Channel ID = -100XXXXXXXXXXX</i></blockquote>\n**")
     try:
-        input7: Message = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
+        input7_msg = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
+        if input7_msg is None:
+            await m.reply_text("**No input received. Please try again.**")
+            return
+        input7: Message = input7_msg
         raw_text7 = input7.text
         await input7.delete(True)
     except asyncio.TimeoutError:
@@ -1180,20 +1193,20 @@ async def drm_handler(bot: Client, m: Message):
                 response = requests.get('https://api.classplusapp.com/cams/uploader/video/jw-signed-url', headers=headers, params=params)
                 url   = response.json()['url']
 
-            if "edge.api.brightcove.com" in url:
+            if url and "edge.api.brightcove.com" in url:
                 bcov = f'bcov_auth={cwtoken}'
                 url = url.split("bcov_auth")[0]+bcov
                 
-            elif "childId" in url and "parentId" in url:
+            elif url and "childId" in url and "parentId" in url:
                 url = f"https://anonymousrajputplayer-9ab2f2730a02.herokuapp.com/pw?url={url}&token={pwtoken}"
                            
-            elif "d1d34p8vz63oiq" in url or "sec1.pw.live" in url:
+            elif url and ("d1d34p8vz63oiq" in url or "sec1.pw.live" in url):
                 url = f"https://anonymouspwplayer-b99f57957198.herokuapp.com/pw?url={url}?token={pwtoken}"
 
-            if ".pdf*" in url:
+            if url and ".pdf*" in url:
                 url = f"https://dragoapi.vercel.app/pdf/{url}"
             
-            elif 'encrypted.m' in url:
+            elif url and 'encrypted.m' in url:
                 appxkey = url.split('*')[1]
                 url = url.split('*')[0]
 
@@ -1596,13 +1609,13 @@ async def text_handler(bot: Client, m: Message):
             if ".pdf*" in url:
                 url = f"https://dragoapi.vercel.app/pdf/{url}"
             
-            elif 'encrypted.m' in url:
+            elif url and 'encrypted.m' in url:
                 appxkey = url.split('*')[1]
                 url = url.split('*')[0]
 
-            if "youtu" in url:
+            if url and "youtu" in url:
                 ytf = f"bv*[height<={raw_text2}][ext=mp4]+ba[ext=m4a]/b[height<=?{raw_text2}]"
-            elif "embed" in url:
+            elif url and "embed" in url:
                 ytf = f"bestvideo[height<={raw_text2}]+bestaudio/best[height<={raw_text2}]"
             else:
                 ytf = f"b[height<={raw_text2}]/bv[height<={raw_text2}]+ba/b/bv+ba"
