@@ -1,24 +1,8 @@
 services:
   - type: web
-    name: saini-txt-direct
+    name: txt-to-cp
+    runtime: docker
     plan: free
-    env: docker
-    dockerfilePath: Dockerfile
-    repo: https://github.com/nikhilsainiop/Saini-txt-direct
-    branch: main
-    autoDeploy: false
     envVars:
-      - key: BOT_TOKEN
-        sync: false
-      - key: API_ID
-        sync: false
-      - key: API_HASH
-        sync: false
-      - key: OWNER
-        sync: false
-      - key: CREDIT
-        sync: false
-      #- key: WEBHOOK
-        #sync: false
-      - key: PORT
-        value: 8000  # Default port value, update if needed
+      - key: PYTHON_VERSION
+        value: 3.12.3

@@ -1,60 +1,49 @@
-<h1 align="center">
-  ✨ AMAN DRM Bot ✨
-</h1>
+# TXT-TO-CP Telegram Bot
 
-<p align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=18&pause=1000&color=00F7FF&center=true&vCenter=true&width=435&lines=Welcome+to+DRM+Bot+by+@aman2004_xd" alt="Typing SVG" />
-</p>
+A Telegram bot for downloading and converting text files to various formats.
 
----
+## Deployment
 
-> 🔐 **Note:** CP DRM supported — Minimum quality **360p**  
-> 🚫 **Do not remove the credit tag**
+### Render Deployment
 
----
+1. Fork this repository
+2. Go to [Render](https://render.com/)
+3. Create a new Web Service
+4. Connect your forked repository
+5. Set the following environment variables:
+   - `API_ID` - Your Telegram API ID
+   - `API_HASH` - Your Telegram API Hash
+   - `BOT_TOKEN` - Your Telegram Bot Token
+   - `OWNER` - Your Telegram User ID
+   - `CREDIT` - Credit name for the bot
 
-## 📜 Commands
+6. Deploy the service
 
-| Command | Description |
-|---------|-------------|
-| `/start` | Start the bot |
-| `/stop`  | Stop the bot |
-| `/help`  | Show help message |
+## Environment Variables
 
----
+- `API_ID` - Telegram API ID (required)
+- `API_HASH` - Telegram API Hash (required)
+- `BOT_TOKEN` - Telegram Bot Token (required)
+- `OWNER` - Telegram User ID of the bot owner (required)
+- `CREDIT` - Credit name for the bot (required)
 
-## 🚀 Deployment Process
+## Commands
 
-🎬 **Watch Full Deployment Tutorial:**  
-[![YouTube Video](https://img.shields.io/badge/Watch%20on-YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/PYDtSTM6w44?si=noKPl7o4iU9SR_TO)
+- `/start` - Start the bot
+- `/drm` - Extract from .txt file
+- `/y2t` - YouTube to .txt converter
+- `/ytm` - YouTube .txt to .mp3 downloader
+- `/yt2m` - YouTube link to .mp3 downloader
+- `/t2t` - Text to .txt generator
 
-### Step-by-Step:
-1. **Fork** the Repository  
-2. **Edit `vars.py`** — Fill in your `API_ID` and `API_HASH`  
-3. **Edit `README.md`** — Change the deploy button links to point to your own fork  
-4. Choose any platform and **Deploy** directly using the buttons below:
+## Features
 
----
+- Download videos from various platforms
+- Convert YouTube playlists to text files
+- Extract audio from YouTube videos
+- Handle DRM-protected content
+- Batch processing capabilities
 
-## 📦 Deploy via Buttons
+## License
 
-[![Deploy to Render](https://img.shields.io/badge/Deploy%20to-Render-blue?style=for-the-badge&logo=render)](https://render.com/deploy)  
-[![Deploy to Heroku](https://img.shields.io/badge/Deploy%20to-Heroku-purple?style=for-the-badge&logo=heroku)](https://www.heroku.com/deploy?template=https://github.com/nikhilsainiop/saini-txt-direct)  
-[![Deploy to Koyeb](https://img.shields.io/badge/Deploy%20to-Koyeb-black?style=for-the-badge&logo=koyeb)](https://app.koyeb.com/deploy?name=saini-txt-direct&repository=nikhilsainiop%2FSaini-txt-direct&branch=main&instance_type=free&instances_min=0)
-
----
-
-## 🤖 Bot Usernames
-
-- [@aman2004_xd](https://t.me/aman2004_xd)
-- [@abcpvtbot](https://t.me/aman2004_xd)
-
----
-
-## 📂 Original Repositories
-
-- 🔗 [nikhilsainiop/saini-txt-direct](https://github.com/missioncfa8/txt-to-cp)
-
----
-
-> 👨‍💻 Created with ❤️ by [@aman2004_xd](https://t.me/aman2004_xd)
+This project is licensed under the MIT License.

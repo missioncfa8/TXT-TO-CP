@@ -37,4 +37,4 @@ RUN pip3 install --no-cache-dir --upgrade pip \
 COPY . .
 
 # Set the command to run the application
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT app:app & python3 main.py"]
+CMD ["./start.sh"]
