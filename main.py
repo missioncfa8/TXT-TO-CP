@@ -179,8 +179,8 @@ async def broadusers_handler(client: Client, message: Message):
             # Handle case where get_users might return a list
             if isinstance(user, list) and len(user) > 0:
                 user = user[0]  # Get the first user if a list is returned
-            # Check if user has the required attributes
-            if hasattr(user, 'first_name') and hasattr(user, 'id'):
+            # Check if user has the required attributes and is not a list
+            if not isinstance(user, list) and hasattr(user, 'first_name') and hasattr(user, 'id'):
                 fname = user.first_name if user.first_name else " "
                 user_infos.append(f"[{user.id}](tg://openmessage?user_id={user.id}) | `{fname}`")
             else:
@@ -197,7 +197,6 @@ async def broadusers_handler(client: Client, message: Message):
     )
     await message.reply_text(text)
     
-        
 @bot.on_message(filters.command("cookies") & filters.private)
 async def cookies_handler(client: Client, m: Message):
     await m.reply_text(
@@ -207,10 +206,15 @@ async def cookies_handler(client: Client, m: Message):
 
     try:
         # Wait for the user to send the cookies file
-        input_message: Message = await client.listen(m.chat.id)
+        input_message = await client.listen(m.chat.id)
+        
+        # Check if we received a message
+        if input_message is None:
+            await m.reply_text("No file received. Please try again.")
+            return
 
         # Validate the uploaded file
-        if not input_message.document or not input_message.document.file_name.endswith(".txt"):
+        if not hasattr(input_message, 'document') or not input_message.document or not input_message.document.file_name.endswith(".txt"):
             await m.reply_text("Invalid file type. Please upload a .txt file.")
             return
 
@@ -237,7 +241,10 @@ async def text_to_txt(client, message: Message):
     user_id = str(message.from_user.id)
     # Inform the user to send the text data and its desired file name
     editable = await message.reply_text(f"<blockquote>Welcome to the Text to .txt Converter!\nSend the **text** for convert into a `.txt` file.</blockquote>")
-    input_message: Message = await bot.listen(message.chat.id)
+    input_message = await bot.listen(message.chat.id)
+    if input_message is None:
+        await message.reply_text("**Send valid text data**")
+        return
     if not input_message.text:
         await message.reply_text("**Send valid text data**")
         return
@@ -246,7 +253,10 @@ async def text_to_txt(client, message: Message):
     await input_message.delete()  # Corrected here
     
     await editable.edit("**🔄 Send file name or send /d for filename**")
-    inputn: Message = await bot.listen(message.chat.id)
+    inputn = await bot.listen(message.chat.id)
+    if inputn is None:
+        await message.reply_text("**Send valid file name**")
+        return
     raw_textn = inputn.text
     await inputn.delete()  # Corrected here
     await editable.delete()
@@ -276,7 +286,10 @@ async def youtube_to_txt(client, message: Message):
         f"Send YouTube Website/Playlist link for convert in .txt file"
     )
 
-    input_message: Message = await bot.listen(message.chat.id)
+    input_message = await bot.listen(message.chat.id)
+    if input_message is None:
+        await message.reply_text("**No input received. Please try again.**")
+        return
     youtube_link = input_message.text.strip()
     await input_message.delete(True)
     await editable.delete(True)
@@ -298,7 +311,7 @@ async def youtube_to_txt(client, message: Message):
                 title = result.get('title', 'youtube_playlist')
             else:
                 title = result.get('title', 'youtube_video')
-        except yt_dlp.utils.DownloadError as e:
+        except Exception as e:
             await message.reply_text(
                 f"<blockquote>{str(e)}</blockquote>"
             )
@@ -335,9 +348,12 @@ async def youtube_to_txt(client, message: Message):
 @bot.on_message(filters.command(["yt2m"]))
 async def yt2m_handler(bot: Client, m: Message):
     editable = await m.reply_text(f"🔹**Send me the YouTube link**")
-    input: Message = await bot.listen(editable.chat.id)
-    youtube_link = input.text.strip()
-    await input.delete(True)
+    input_message = await bot.listen(editable.chat.id)
+    if input_message is None:
+        await m.reply_text("**No input received. Please try again.**")
+        return
+    youtube_link = input_message.text.strip()
+    await input_message.delete(True)
     Show = f"**⚡Dᴏᴡɴʟᴏᴀᴅ Sᴛᴀʀᴛᴇᴅ...⏳**\n\n🔗𝐔𝐑𝐋 »  {youtube_link}\n\n✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}🐦"
     await editable.edit(Show, disable_web_page_preview=True)
     await asyncio.sleep(10)
@@ -1601,83 +1617,71 @@ async def text_handler(bot: Client, m: Message):
                             # Send the final failure message if all retries fail
                             await m.reply_text(f"Failed to download PDF after {max_retries} attempts.\n⚠️**Downloading Failed**⚠️\n**Name** =>> {str(count).zfill(3)} {name1}\n**Url** =>> {url}", disable_web_page_preview)
                         continue
-                else:
-                    try:
-                        cmd = f'yt-dlp -o "{name}.pdf" "{url}"'
-                        download_cmd = f"{cmd} -R 25 --fragment-retries 25"
-                        os.system(download_cmd)
-                        copy = await bot.send_document(chat_id=m.chat.id, document=f'{name}.pdf', caption=cc1)
-                        os.remove(f'{name}.pdf')
-                    except FloodWait as e:
-                        await m.reply_text(str(e))
-                        time.sleep(e.x)
-                        pass   
+            elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
+                try:
+                    ext = url.split('.')[-1]
+                    cmd = f'yt-dlp -x --audio-format {ext} -o "{name}.{ext}" "{url}"'
+                    download_cmd = f"{cmd} -R 25 --fragment-retries 25"
+                    os.system(download_cmd)
+                    await bot.send_document(chat_id=m.chat.id, document=f'{name}.{ext}', caption=cc1)
+                    os.remove(f'{name}.{ext}')
+                except FloodWait as e:
+                    await m.reply_text(str(e))
+                    time.sleep(e.x)
+                    pass
 
-                elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
-                    try:
-                        ext = url.split('.')[-1]
-                        cmd = f'yt-dlp -x --audio-format {ext} -o "{name}.{ext}" "{url}"'
-                        download_cmd = f"{cmd} -R 25 --fragment-retries 25"
-                        os.system(download_cmd)
-                        await bot.send_document(chat_id=m.chat.id, document=f'{name}.{ext}', caption=cc1)
-                        os.remove(f'{name}.{ext}')
-                    except FloodWait as e:
-                        await m.reply_text(str(e))
-                        time.sleep(e.x)
-                        pass
-
-                elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
-                    try:
-                        ext = url.split('.')[-1]
-                        cmd = f'yt-dlp -o "{name}.{ext}" "{url}"'
-                        download_cmd = f"{cmd} -R 25 --fragment-retries 25"
-                        os.system(download_cmd)
-                        copy = await bot.send_photo(chat_id=m.chat.id, photo=f'{name}.{ext}', caption=cc1)
-                        count += 1
-                        os.remove(f'{name}.{ext}')
-                    except FloodWait as e:
-                        await m.reply_text(str(e))
-                        time.sleep(e.x)
-                        pass
+            elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
+                try:
+                    ext = url.split('.')[-1]
+                    cmd = f'yt-dlp -o "{name}.{ext}" "{url}"'
+                    download_cmd = f"{cmd} -R 25 --fragment-retries 25"
+                    os.system(download_cmd)
+                    copy = await bot.send_photo(chat_id=m.chat.id, photo=f'{name}.{ext}', caption=cc1)
+                    count += 1
+                    os.remove(f'{name}.{ext}')
+                except FloodWait as e:
+                    await m.reply_text(str(e))
+                    time.sleep(e.x)
+                    pass
                                 
-                elif 'encrypted.m' in url:    
-                    Show = f"**⚡Dᴏᴡɴʟᴏᴀᴅɪɴɢ Sᴛᴀʀᴛᴇᴅ...⏳**\n" \
-                           f"🔗𝐋𝐢𝐧𝐤 » {url}\n" \
-                           f"✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}"
-                    prog = await m.reply_text(Show, disable_web_page_preview=True)
-                    res_file = await helper.download_and_decrypt_video(url, cmd, name, appxkey)  
-                    filename = res_file  
-                    await prog.delete(True)  
-                    await helper.send_vid(bot, m, cc, filename, thumb, name, prog, channel_id)
-                    await asyncio.sleep(1)  
-                    pass
+            elif 'encrypted.m' in url:    
+                Show = f"**⚡Dᴏᴡɴʟᴏᴀᴅɪ𝐧ɢ Sᴛᴀʀᴛᴇᴅ...⏳**\n" \
+                       f"🔗𝐋𝐢𝐧𝐤 » {url}\n" \
+                       f"✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}"
+                prog = await m.reply_text(Show, disable_web_page_preview=True)
+                res_file = await helper.download_and_decrypt_video(url, cmd, name, appxkey)  
+                filename = res_file  
+                await prog.delete(True)  
+                await helper.send_vid(bot, m, cc, filename, thumb, name, prog, channel_id)
+                await asyncio.sleep(1)  
+                pass
 
-                elif 'drmcdni' in url or 'drm/wv' in url:
-                    Show = f"**⚡Dᴏᴡɴʟᴏᴀᴅɪɴɢ Sᴛᴀʀᴛᴇᴅ...⏳**\n" \
-                           f"🔗𝐋𝐢𝐧𝐤 » {url}\n" \
-                           f"✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}"
-                    prog = await m.reply_text(Show, disable_web_page_preview=True)
-                    res_file = await helper.decrypt_and_merge_video(mpd, keys_string, path, name, raw_text2)
-                    filename = res_file
-                    await prog.delete(True)
-                    await helper.send_vid(bot, m, cc, filename, thumb, name, prog, channel_id)
-                    await asyncio.sleep(1)
-                    pass
+            elif 'drmcdni' in url or 'drm/wv' in url:
+                Show = f"**⚡Dᴏᴡɴʟᴏᴀᴅɪ𝐧ɢ Sᴛᴀʀᴛᴇᴅ...⏳**\n" \
+                       f"🔗𝐋𝐢𝐧𝐤 » {url}\n" \
+                       f"✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}"
+                prog = await m.reply_text(Show, disable_web_page_preview=True)
+                res_file = await helper.decrypt_and_merge_video(mpd, keys_string, path, name, raw_text2)
+                filename = res_file
+                await prog.delete(True)
+                await helper.send_vid(bot, m, cc, filename, thumb, name, prog, channel_id)
+                await asyncio.sleep(1)
+                pass
      
-                else:
-                    Show = f"**⚡Dᴏᴡɴʟᴏᴀᴅɪɴɢ Sᴛᴀʀᴛᴇᴅ...⏳**\n" \
-                           f"🔗𝐋𝐢𝐧𝐤 » {url}\n" \
-                           f"✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}"
-                    prog = await m.reply_text(Show, disable_web_page_preview=True)
-                    res_file = await helper.download_video(url, cmd, name)
-                    filename = res_file
-                    await prog.delete(True)
-                    await helper.send_vid(bot, m, cc, filename, thumb, name, prog, channel_id)
-                    time.sleep(1)
+            else:
+                Show = f"**⚡Dᴏᴡɴʟᴏᴀᴅɪ𝐧ɢ Sᴛᴀʀᴛᴇᴅ...⏳**\n" \
+                       f"🔗𝐋𝐢𝐧𝐤 » {url}\n" \
+                       f"✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}"
+                prog = await m.reply_text(Show, disable_web_page_preview=True)
+                res_file = await helper.download_video(url, cmd, name)
+                filename = res_file
+                await prog.delete(True)
+                await helper.send_vid(bot, m, cc, filename, thumb, name, prog, channel_id)
+                time.sleep(1)
 
-            except Exception as e:
-                    await m.reply_text(f"⚠️𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐢𝐧𝐠 𝐈𝐧𝐭𝐞𝐫𝐮𝐩𝐭𝐞𝐝\n\n🔗𝐋𝐢𝐧𝐤 » `{link}`\n\n<blockquote><b><i>⚠️Failed Reason »**__\n{str(e)}</i></b></blockquote>")
-                    pass
+        except Exception as e:
+            await m.reply_text(f"⚠️𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐢𝐧𝐠 𝐈𝐧𝐭𝐞𝐫𝐮𝐩𝐭𝐞𝐝\n\n🔗𝐋𝐢𝐧𝐤 » `{link}`\n\n<blockquote><b><i>⚠️Failed Reason »**__\n{str(e)}</i></b></blockquote>")
+            pass
 
     except Exception as e:
         await m.reply_text(str(e))
