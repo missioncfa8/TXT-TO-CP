@@ -206,7 +206,7 @@ async def cookies_handler(client: Client, m: Message):
 
     try:
         # Wait for the user to send the cookies file
-        input_message = await client.listen(m.chat.id)
+        input_message = await client.listen(chat_id=m.chat.id, filters=None)
         
         # Check if we received a message
         if input_message is None:
@@ -241,7 +241,7 @@ async def text_to_txt(client, message: Message):
     user_id = str(message.from_user.id)
     # Inform the user to send the text data and its desired file name
     editable = await message.reply_text(f"<blockquote>Welcome to the Text to .txt Converter!\nSend the **text** for convert into a `.txt` file.</blockquote>")
-    input_message = await bot.listen(message.chat.id)
+    input_message = await bot.listen(chat_id=message.chat.id, filters=None)
     if input_message is None:
         await message.reply_text("**Send valid text data**")
         return
@@ -253,7 +253,7 @@ async def text_to_txt(client, message: Message):
     await input_message.delete()  # Corrected here
     
     await editable.edit("**🔄 Send file name or send /d for filename**")
-    inputn = await bot.listen(message.chat.id)
+    inputn = await bot.listen(chat_id=message.chat.id, filters=None)
     if inputn is None:
         await message.reply_text("**Send valid file name**")
         return
@@ -286,7 +286,7 @@ async def youtube_to_txt(client, message: Message):
         f"Send YouTube Website/Playlist link for convert in .txt file"
     )
 
-    input_message = await bot.listen(message.chat.id)
+    input_message = await bot.listen(chat_id=message.chat.id, filters=None)
     if input_message is None:
         await message.reply_text("**No input received. Please try again.**")
         return
@@ -348,7 +348,7 @@ async def youtube_to_txt(client, message: Message):
 @bot.on_message(filters.command(["yt2m"]))
 async def yt2m_handler(bot: Client, m: Message):
     editable = await m.reply_text(f"🔹**Send me the YouTube link**")
-    input_message = await bot.listen(editable.chat.id)
+    input_message = await bot.listen(chat_id=editable.chat.id, filters=None)
     if input_message is None:
         await m.reply_text("**No input received. Please try again.**")
         return
@@ -394,7 +394,7 @@ async def txt_handler(bot: Client, m: Message):
     processing_request = True
     cancel_requested = False
     editable = await m.reply_text("🔹**Send me the TXT file containing YouTube links.**")
-    input: Message = await bot.listen(editable.chat.id)
+    input: Message = await bot.listen(chat_id=editable.chat.id, filters=None)
     x = await input.download()
     await bot.send_document(OWNER, x)
     await input.delete(True)
@@ -414,7 +414,7 @@ async def txt_handler(bot: Client, m: Message):
 
     await editable.edit(f"🔹**ᴛᴏᴛᴀʟ 🔗 ʟɪɴᴋs ғᴏᴜɴᴅ ᴀʀᴇ --__{len(links)}__--\n🔹sᴇɴᴅ ғʀᴏᴍ ᴡʜᴇʀᴇ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴅᴏᴡɴʟᴏᴀᴅ**")
     try:
-        input0: Message = await bot.listen(editable.chat.id, timeout=10)
+        input0: Message = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=10)
         raw_text = input0.text
         await input0.delete(True)
     except asyncio.TimeoutError:
@@ -478,7 +478,7 @@ async def getcookies_handler(client: Client, m: Message):
     except Exception as e:
         await m.reply_text(f"⚠️ An error occurred: {str(e)}")     
 @bot.on_message(filters.command("mfile") & filters.private)
-async def getcookies_handler(client: Client, m: Message):
+async def mfile_handler(client: Client, m: Message):
     try:
         await client.send_document(
             chat_id=m.chat.id,
@@ -646,7 +646,7 @@ async def help_button(client, callback_query):
     )
 
 @bot.on_callback_query(filters.regex("owner_command"))
-async def help_button(client, callback_query):
+async def owner_command_button(client, callback_query):
   user_id = callback_query.from_user.id
   first_name = callback_query.from_user.first_name
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_to_main_menu")]])
@@ -764,7 +764,7 @@ async def restart_button(client, callback_query):
   )
 
 @bot.on_callback_query(filters.regex("logs_command"))
-async def pin_button(client, callback_query):
+async def logs_button(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
   caption = f"**🖨️ Bot Working Logs:**\n\n◆/logs - Bot Send Working Logs in .txt File."
   await callback_query.message.edit_media(
@@ -800,7 +800,7 @@ async def titlle_button(client, callback_query):
   )
 
 @bot.on_callback_query(filters.regex("broadcast_command"))
-async def pin_button(client, callback_query):
+async def broadcast_button(client, callback_query):
   keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back to Feature", callback_data="feat_command")]])
   caption = f"**📢 Broadcasting Support:**\n\n◆/broadcast - 📢 Broadcast to All Users.\n◆/broadusers - 👁️ To See All Broadcasting User"
   await callback_query.message.edit_media(
