@@ -11,6 +11,7 @@ import subprocess
 import urllib
 import urllib.parse
 import yt_dlp
+from typing import Any, Dict, List, Union, Optional
 import tgcrypto
 import cloudscraper
 from Crypto.Cipher import AES
@@ -23,7 +24,7 @@ from utils import progress_bar
 from vars import API_ID, API_HASH, BOT_TOKEN, OWNER, CREDIT, AUTH_USERS, TOTAL_USERS
 from aiohttp import ClientSession
 from subprocess import getstatusoutput
-from pytube import YouTube
+# from pytube import YouTube  # Commented out as not used
 from aiohttp import web
 import random
 from pyromod import listen
@@ -37,7 +38,7 @@ import aiohttp
 import aiofiles
 import zipfile
 import shutil
-import ffmpeg
+# import ffmpeg  # Commented out as not used
 
 # Initialize the bot
 bot = Client(
@@ -318,15 +319,16 @@ async def youtube_to_txt(client, message: Message):
             return
 
     # Extract the YouTube links
-    videos = []
-    if 'entries' in result:
+    videos: List[str] = []
+    if 'entries' in result and isinstance(result['entries'], list):
         for entry in result['entries']:
-            video_title = entry.get('title', 'No title')
-            url = entry['url']
-            videos.append(f"{video_title}: {url}")
+            if entry and isinstance(entry, dict):
+                video_title = entry.get('title', 'No title')
+                url = entry.get('url', '')
+                videos.append(f"{video_title}: {url}")
     else:
         video_title = result.get('title', 'No title')
-        url = result['url']
+        url = result.get('url', '')
         videos.append(f"{video_title}: {url}")
 
     # Create and save the .txt file with the custom name
@@ -394,7 +396,11 @@ async def txt_handler(bot: Client, m: Message):
     processing_request = True
     cancel_requested = False
     editable = await m.reply_text("🔹**Send me the TXT file containing YouTube links.**")
-    input: Message = await bot.listen(chat_id=editable.chat.id, filters=None)
+    input_msg = await bot.listen(chat_id=editable.chat.id, filters=None)
+    if input_msg is None:
+        await m.reply_text("**No input received. Please try again.**")
+        return
+    input: Message = input_msg
     x = await input.download()
     await bot.send_document(OWNER, x)
     await input.delete(True)
@@ -414,7 +420,11 @@ async def txt_handler(bot: Client, m: Message):
 
     await editable.edit(f"🔹**ᴛᴏᴛᴀʟ 🔗 ʟɪɴᴋs ғᴏᴜɴᴅ ᴀʀᴇ --__{len(links)}__--\n🔹sᴇɴᴅ ғʀᴏᴍ ᴡʜᴇʀᴇ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ᴅᴏᴡɴʟᴏᴀᴅ**")
     try:
-        input0: Message = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=10)
+        input0_msg = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=10)
+        if input0_msg is None:
+            await m.reply_text("**No input received. Please try again.**")
+            return
+        input0: Message = input0_msg
         raw_text = input0.text
         await input0.delete(True)
     except asyncio.TimeoutError:
@@ -873,7 +883,7 @@ async def send_logs(client: Client, m: Message):  # Correct parameter name
 
 
 @bot.on_message(filters.command(["drm"]) )
-async def txt_handler(bot: Client, m: Message):  
+async def drm_handler(bot: Client, m: Message):  
     global processing_request, cancel_requested, cancel_message
     processing_request = True
     cancel_requested = False
@@ -882,7 +892,11 @@ async def txt_handler(bot: Client, m: Message):
             await bot.send_message(m.chat.id, f"<blockquote>__**Oopss! You are not a Premium member\nPLEASE /upgrade YOUR PLAN\nSend me your user id for authorization\nYour User id**__ - `{m.chat.id}`</blockquote>\n")
             return
     editable = await m.reply_text(f"**__Hii, I am non-drm Downloader Bot__\n<blockquote><i>Send Me Your text file which enclude Name with url...\nE.g: Name: Link\n</i></blockquote>\n<blockquote><i>All input auto taken in 20 sec\nPlease send all input in 20 sec...\n</i></blockquote>**")
-    input: Message = await bot.listen(editable.chat.id)
+    input_msg = await bot.listen(chat_id=editable.chat.id, filters=None)
+    if input_msg is None:
+        await m.reply_text("**No input received. Please try again.**")
+        return
+    input: Message = input_msg
     x = await input.download()
     await bot.send_document(OWNER, x)
     await input.delete(True)
@@ -935,7 +949,11 @@ async def txt_handler(bot: Client, m: Message):
     
     await editable.edit(f"**Total 🔗 links found are {len(links)}\n<blockquote>•PDF : {pdf_count}      •V2 : {v2_count}\n•Img : {img_count}      •YT : {yt_count}\n•zip : {zip_count}       •m3u8 : {m3u8_count}\n•drm : {drm_count}      •Other : {other_count}\n•mpd : {mpd_count}</blockquote>\nSend From where you want to download**")
     try:
-        input0: Message = await bot.listen(editable.chat.id, timeout=20)
+        input0_msg = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
+        if input0_msg is None:
+            await m.reply_text("**No input received. Please try again.**")
+            return
+        input0: Message = input0_msg
         raw_text = input0.text
         await input0.delete(True)
     except asyncio.TimeoutError:
@@ -949,7 +967,11 @@ async def txt_handler(bot: Client, m: Message):
         
     await editable.edit(f"**Enter Batch Name or send /d**")
     try:
-        input1: Message = await bot.listen(editable.chat.id, timeout=20)
+        input1_msg = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
+        if input1_msg is None:
+            await m.reply_text("**No input received. Please try again.**")
+            return
+        input1: Message = input1_msg
         raw_text0 = input1.text
         await input1.delete(True)
     except asyncio.TimeoutError:
@@ -963,7 +985,11 @@ async def txt_handler(bot: Client, m: Message):
 
     await editable.edit("__**Enter resolution or Video Quality (`144`, `240`, `360`, `480`, `720`, `1080`)**__")
     try:
-        input2: Message = await bot.listen(editable.chat.id, timeout=20)
+        input2_msg = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
+        if input2_msg is None:
+            await m.reply_text("**No input received. Please try again.**")
+            return
+        input2: Message = input2_msg
         raw_text2 = input2.text
         await input2.delete(True)
     except asyncio.TimeoutError:
@@ -989,7 +1015,11 @@ async def txt_handler(bot: Client, m: Message):
 
     await editable.edit(f"**Enter the Credit Name or send /d\n\n<blockquote><b>Format:</b>\n🔹Send __Admin__ only for caption\n🔹Send __Admin,filename__ for caption and file...Separate them with a comma (,)</blockquote>**")
     try:
-        input3: Message = await bot.listen(editable.chat.id, timeout=20)
+        input3_msg = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
+        if input3_msg is None:
+            await m.reply_text("**No input received. Please try again.**")
+            return
+        input3: Message = input3_msg
         raw_text3 = input3.text
         await input3.delete(True)
     except asyncio.TimeoutError:
@@ -1004,7 +1034,7 @@ async def txt_handler(bot: Client, m: Message):
 
     await editable.edit("**Enter 𝐏𝐖/𝐂𝐖/𝐂𝐏 Working Token For 𝐌𝐏𝐃 𝐔𝐑𝐋 or send /d**")
     try:
-        input4: Message = await bot.listen(editable.chat.id, timeout=20)
+        input4: Message = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
         raw_text4 = input4.text
         await input4.delete(True)
     except asyncio.TimeoutError:
@@ -1021,7 +1051,7 @@ async def txt_handler(bot: Client, m: Message):
         
     await editable.edit(f"**Send the Video Thumb URL or send /d**")
     try:
-        input6: Message = await bot.listen(editable.chat.id, timeout=20)
+        input6: Message = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
         raw_text6 = input6.text
         await input6.delete(True)
     except asyncio.TimeoutError:
@@ -1036,7 +1066,7 @@ async def txt_handler(bot: Client, m: Message):
 
     await editable.edit("__**⚠️Provide the Channel ID or send /d__\n\n<blockquote><i>🔹 Make me an admin to upload.\n🔸Send /id in your channel to get the Channel ID.\n\nExample: Channel ID = -100XXXXXXXXXXX</i></blockquote>\n**")
     try:
-        input7: Message = await bot.listen(editable.chat.id, timeout=20)
+        input7: Message = await bot.listen(chat_id=editable.chat.id, filters=None, timeout=20)
         raw_text7 = input7.text
         await input7.delete(True)
     except asyncio.TimeoutError:
