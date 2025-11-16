@@ -12,6 +12,7 @@ import urllib
 import urllib.parse
 import yt_dlp
 from typing import Any, Dict, List, Union, Optional
+from yt_dlp import YoutubeDL
 import tgcrypto
 import cloudscraper
 from Crypto.Cipher import AES
@@ -296,7 +297,7 @@ async def youtube_to_txt(client, message: Message):
     await editable.delete(True)
 
     # Fetch the YouTube information using yt-dlp with cookies
-    ydl_opts = {
+    ydl_opts: dict = {
         'quiet': True,
         'extract_flat': True,
         'skip_download': True,
@@ -307,7 +308,7 @@ async def youtube_to_txt(client, message: Message):
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
-            result = ydl.extract_info(youtube_link, download=False)
+            result: dict = ydl.extract_info(youtube_link, download=False)
             if 'entries' in result:
                 title = result.get('title', 'youtube_playlist')
             else:
@@ -321,7 +322,8 @@ async def youtube_to_txt(client, message: Message):
     # Extract the YouTube links
     videos: List[str] = []
     if 'entries' in result and isinstance(result['entries'], list):
-        for entry in result['entries']:
+        entries = result['entries']
+        for entry in entries:
             if entry and isinstance(entry, dict):
                 video_title = entry.get('title', 'No title')
                 url = entry.get('url', '')
@@ -1153,7 +1155,9 @@ async def drm_handler(bot: Client, m: Message):
                 async with ClientSession() as session:
                     async with session.get(url, headers={'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'Accept-Language': 'en-US,en;q=0.9', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'Pragma': 'no-cache', 'Referer': 'http://www.visionias.in/', 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Site': 'cross-site', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Linux; Android 12; RMX2121) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36', 'sec-ch-ua': '"Chromium";v="107", "Not=A?Brand";v="24"', 'sec-ch-ua-mobile': '?1', 'sec-ch-ua-platform': '"Android"',}) as resp:
                         text = await resp.text()
-                        url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
+                        match = re.search(r"(https://.*?playlist.m3u8.*?)\"", text)
+                        if match:
+                            url = match.group(1)
 
             if "acecwply" in url:
                 cmd = f'yt-dlp -o "{name}.%(ext)s" -f "bestvideo[height<={raw_text2}]+bestaudio" --hls-prefer-ffmpeg --no-keep-video --remux-video mkv --no-warning "{url}"'
@@ -1164,14 +1168,14 @@ async def drm_handler(bot: Client, m: Message):
                 #url = f"https://scammer-keys.vercel.app/api?url={url}&token={cptoken}&auth=@scammer_botxz1"
                 mpd, keys = helper.get_mps_and_keys(url)
                 url = mpd
-                keys_string = " ".join([f"--key {key}" for key in keys])
+                keys_string = " ".join([f"--key {key}" for key in keys]) if keys and isinstance(keys, (list, tuple)) else ""
 
             elif "classplusapp.com/drm/" in url:
                 url = f"https://team-jnc-ba95987c225e.herokuapp.com/api?url={url}"
                 #url = f"https://scammer-keys.vercel.app/api?url={url}&token={cptoken}&auth=@scammer_botxz1"
                 mpd, keys = helper.get_mps_and_keys(url)
                 url = mpd
-                keys_string = " ".join([f"--key {key}" for key in keys])
+                keys_string = " ".join([f"--key {key}" for key in keys]) if keys and isinstance(keys, (list, tuple)) else ""
 
             elif "classplusapp" in url:
                 signed_api = f"https://team-jnc-n-drm.vercel.app/api?url={url}"
@@ -1203,6 +1207,7 @@ async def drm_handler(bot: Client, m: Message):
             elif url and ("d1d34p8vz63oiq" in url or "sec1.pw.live" in url):
                 url = f"https://anonymouspwplayer-b99f57957198.herokuapp.com/pw?url={url}?token={pwtoken}"
 
+            appxkey = ""  # Initialize appxkey to avoid unbound variable error
             if url and ".pdf*" in url:
                 url = f"https://dragoapi.vercel.app/pdf/{url}"
             
@@ -1217,11 +1222,11 @@ async def drm_handler(bot: Client, m: Message):
             else:
                 ytf = f"b[height<={raw_text2}]/bv[height<={raw_text2}]+ba/b/bv+ba"
            
-            if "jw-prod" in url:
+            if url and "jw-prod" in url:
                 cmd = f'yt-dlp -o "{name}.mp4" "{url}"'
-            elif "webvideos.classplusapp." in url:
+            elif url and "webvideos.classplusapp." in url:
                cmd = f'yt-dlp --add-header "referer:https://web.classplusapp.com/" --add-header "x-cdn-tag:empty" -f "{ytf}" "{url}" -o "{name}.mp4"'
-            elif "youtube.com" in url or "youtu.be" in url:
+            elif url and ("youtube.com" in url or "youtu.be" in url):
                 cmd = f'yt-dlp --cookies youtube_cookies.txt -f "{ytf}" "{url}" -o "{name}".mp4'
             else:
                 cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
@@ -1307,7 +1312,7 @@ async def drm_handler(bot: Client, m: Message):
                             time.sleep(5)
                             continue    
 
-                elif ".ws" in url and  url.endswith(".ws"):
+                elif url and ".ws" in url and  url.endswith(".ws"):
                     try:
                         await helper.pdf_download(f"{api_url}utkash-ws?url={url}&authorization={api_token}",f"{name}.html")
                         time.sleep(1)
@@ -1324,9 +1329,9 @@ async def drm_handler(bot: Client, m: Message):
                         time.sleep(5)
                         continue    
 
-                elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
+                elif url and any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
                     try:
-                        ext = url.split('.')[-1]
+                        ext = url.split('.')[-1] if url else ''
                         cmd = f'yt-dlp -o "{name}.{ext}" "{url}"'
                         download_cmd = f"{cmd} -R 25 --fragment-retries 25"
                         os.system(download_cmd)
@@ -1343,9 +1348,9 @@ async def drm_handler(bot: Client, m: Message):
                         time.sleep(5)
                         continue    
 
-                elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
+                elif url and any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
                     try:
-                        ext = url.split('.')[-1]
+                        ext = url.split('.')[-1] if url else ''
                         cmd = f'yt-dlp -o "{name}.{ext}" "{url}"'
                         download_cmd = f"{cmd} -R 25 --fragment-retries 25"
                         os.system(download_cmd)
@@ -1557,7 +1562,9 @@ async def text_handler(bot: Client, m: Message):
                 async with ClientSession() as session:
                     async with session.get(url, headers={'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'Accept-Language': 'en-US,en;q=0.9', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'Pragma': 'no-cache', 'Referer': 'http://www.visionias.in/', 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Site': 'cross-site', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Linux; Android 12; RMX2121) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36', 'sec-ch-ua': '"Chromium";v="107", "Not=A?Brand";v="24"', 'sec-ch-ua-mobile': '?1', 'sec-ch-ua-platform': '"Android"',}) as resp:
                         text = await resp.text()
-                        url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
+                        match = re.search(r"(https://.*?playlist.m3u8.*?)\"", text)
+                        if match:
+                            url = match.group(1)
 
             if "acecwply" in url:
                 cmd = f'yt-dlp -o "{name}.%(ext)s" -f "bestvideo[height<={raw_text2}]+bestaudio" --hls-prefer-ffmpeg --no-keep-video --remux-video mkv --no-warning "{url}"'
@@ -1606,7 +1613,8 @@ async def text_handler(bot: Client, m: Message):
                 vid_id =  url.split('/')[-2]
                 url = f"https://anonymouspwplayer-b99f57957198.herokuapp.com/pw?url={url}?token={raw_text4}"
                 
-            if ".pdf*" in url:
+            appxkey = ""  # Initialize appxkey to avoid unbound variable error
+            if url and ".pdf*" in url:
                 url = f"https://dragoapi.vercel.app/pdf/{url}"
             
             elif url and 'encrypted.m' in url:
@@ -1620,11 +1628,11 @@ async def text_handler(bot: Client, m: Message):
             else:
                 ytf = f"b[height<={raw_text2}]/bv[height<={raw_text2}]+ba/b/bv+ba"
            
-            if "jw-prod" in url:
+            if url and "jw-prod" in url:
                 cmd = f'yt-dlp -o "{name}.mp4" "{url}"'
-            elif "webvideos.classplusapp." in url:
+            elif url and "webvideos.classplusapp." in url:
                cmd = f'yt-dlp --add-header "referer:https://web.classplusapp.com/" --add-header "x-cdn-tag:empty" -f "{ytf}" "{url}" -o "{name}.mp4"'
-            elif "youtube.com" in url or "youtu.be" in url:
+            elif url and ("youtube.com" in url or "youtu.be" in url):
                 cmd = f'yt-dlp --cookies youtube_cookies.txt -f "{ytf}" "{url}" -o "{name}".mp4'
             else:
                 cmd = f'yt-dlp -f "{ytf}" "{url}" -o "{name}.mp4"'
@@ -1687,8 +1695,8 @@ async def text_handler(bot: Client, m: Message):
                     time.sleep(e.x)
                     pass
                                 
-            elif 'encrypted.m' in url:    
-                Show = f"**⚡Dᴏᴡɴʟᴏᴀᴅɪ𝐧ɢ Sᴛᴀʀᴛᴇᴅ...⏳**\n" \
+            elif url and 'encrypted.m' in url:    
+                Show = f"**⚡Dᴏᴡɴʟᴏᴀᴅɪɴɢ Sᴛᴀʀᴛᴇᴅ...⏳**\n" \
                        f"🔗𝐋𝐢𝐧𝐤 » {url}\n" \
                        f"✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}"
                 prog = await m.reply_text(Show, disable_web_page_preview=True)
