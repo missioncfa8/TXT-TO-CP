@@ -1210,9 +1210,9 @@ async def drm_handler(bot: Client, m: Message):
                 appxkey = url.split('*')[1]
                 url = url.split('*')[0]
 
-            if "youtu" in url:
+            if url and "youtu" in url:
                 ytf = f"bv*[height<={raw_text2}][ext=mp4]+ba[ext=m4a]/b[height<=?{raw_text2}]"
-            elif "embed" in url:
+            elif url and "embed" in url:
                 ytf = f"bestvideo[height<={raw_text2}]+bestaudio/best[height<={raw_text2}]"
             else:
                 ytf = f"b[height<={raw_text2}]/bv[height<={raw_text2}]+ba/b/bv+ba"
@@ -1234,7 +1234,7 @@ async def drm_handler(bot: Client, m: Message):
                 ccm = f'[🎵]Audio Id : {str(count).zfill(3)}\n**Audio Title :** `{name1}.mp3`\n<blockquote><b>Batch Name :</b> {b_name}</blockquote>\n\n**Extracted by➤**{CR}\n'
                 cchtml = f'[🌐]Html Id : {str(count).zfill(3)}\n**Html Title :** `{name1}.html`\n<blockquote><b>Batch Name :</b> {b_name}</blockquote>\n\n**Extracted by➤**{CR}\n'
                   
-                if "drive" in url:
+                if url and "drive" in url:
                     try:
                         ka = await helper.download(url, name)
                         try:
@@ -1246,11 +1246,11 @@ async def drm_handler(bot: Client, m: Message):
                         os.remove(ka)
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        time.sleep(e.x)
+                        time.sleep(5)
                         continue    
 
-                elif ".pdf" in url:
-                    if "cwmediabkt99" in url:
+                elif url and ".pdf" in url:
+                    if url and "cwmediabkt99" in url:
                         max_retries = 15  # Define the maximum number of retries
                         retry_delay = 4  # Delay between retries in seconds
                         success = False  # To track whether the download was successful
@@ -1304,7 +1304,7 @@ async def drm_handler(bot: Client, m: Message):
                             os.remove(f'{name}.pdf')
                         except FloodWait as e:
                             await m.reply_text(str(e))
-                            time.sleep(e.x)
+                            time.sleep(5)
                             continue    
 
                 elif ".ws" in url and  url.endswith(".ws"):
@@ -1321,7 +1321,7 @@ async def drm_handler(bot: Client, m: Message):
                         count += 1
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        time.sleep(e.x)
+                        time.sleep(5)
                         continue    
 
                 elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
@@ -1340,7 +1340,7 @@ async def drm_handler(bot: Client, m: Message):
                         os.remove(f'{name}.{ext}')
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        time.sleep(e.x)
+                        time.sleep(5)
                         continue    
 
                 elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
@@ -1359,7 +1359,7 @@ async def drm_handler(bot: Client, m: Message):
                         os.remove(f'{name}.{ext}')
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        time.sleep(e.x)
+                        time.sleep(5)
                         continue    
 
                 elif 'encrypted.m' in url:    
@@ -1653,7 +1653,7 @@ async def text_handler(bot: Client, m: Message):
                         break  # Success, exit retry loop
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        time.sleep(e.x)
+                        time.sleep(5)
                         continue
                     except Exception as e:
                         if attempt == max_retries - 1:  # Last attempt failed
