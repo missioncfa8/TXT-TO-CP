@@ -13,6 +13,7 @@ import urllib.parse
 import yt_dlp
 from typing import Any, Dict, List, Union, Optional
 from yt_dlp import YoutubeDL
+from yt_dlp.utils import DownloadError
 import tgcrypto
 import cloudscraper
 from Crypto.Cipher import AES
@@ -297,7 +298,7 @@ async def youtube_to_txt(client, message: Message):
     await editable.delete(True)
 
     # Fetch the YouTube information using yt-dlp with cookies
-    ydl_opts: dict = {
+    ydl_opts = {
         'quiet': True,
         'extract_flat': True,
         'skip_download': True,
@@ -306,9 +307,9 @@ async def youtube_to_txt(client, message: Message):
         'cookies': 'youtube_cookies.txt'  # Specify the cookies file
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+    with YoutubeDL(ydl_opts) as ydl:
         try:
-            result: dict = ydl.extract_info(youtube_link, download=False)
+            result = ydl.extract_info(youtube_link, download=False)
             if 'entries' in result:
                 title = result.get('title', 'youtube_playlist')
             else:
@@ -322,12 +323,13 @@ async def youtube_to_txt(client, message: Message):
     # Extract the YouTube links
     videos: List[str] = []
     if 'entries' in result and isinstance(result['entries'], list):
-        entries = result['entries']
-        for entry in entries:
-            if entry and isinstance(entry, dict):
-                video_title = entry.get('title', 'No title')
-                url = entry.get('url', '')
-                videos.append(f"{video_title}: {url}")
+        entries = result.get('entries', [])
+        if isinstance(entries, list):
+            for entry in entries:
+                if entry and isinstance(entry, dict):
+                    video_title = entry.get('title', 'No title')
+                    url = entry.get('url', '')
+                    videos.append(f"{video_title}: {url}")
     else:
         video_title = result.get('title', 'No title')
         url = result.get('url', '')
@@ -1367,7 +1369,7 @@ async def drm_handler(bot: Client, m: Message):
                         time.sleep(5)
                         continue    
 
-                elif 'encrypted.m' in url:    
+                elif url and 'encrypted.m' in url:    
                     remaining_links = len(links) - count
                     progress = (count / len(links)) * 100
                     Show1 = f"<blockquote>🚀𝐏𝐫𝐨𝐠𝐫𝐞𝐬𝐬 » {progress:.2f}%</blockquote>\n┃\n" \
@@ -1405,7 +1407,7 @@ async def drm_handler(bot: Client, m: Message):
                     await asyncio.sleep(1)  
                     continue  
 
-                elif 'drmcdni' in url or 'drm/wv' in url:
+                elif url and ('drmcdni' in url or 'drm/wv' in url):
                     remaining_links = len(links) - count
                     progress = (count / len(links)) * 100
                     Show1 = f"<blockquote>🚀𝐏𝐫𝐨𝐠𝐫𝐞𝐬𝐬 » {progress:.2f}%</blockquote>\n┃\n" \
@@ -1490,7 +1492,7 @@ async def drm_handler(bot: Client, m: Message):
                 continue
 
     except Exception as e:
-        await m.reply_text(e)
+        await m.reply_text(str(e))
         time.sleep(2)
 
     success_count = len(links) - failed_count
@@ -1523,7 +1525,11 @@ async def text_handler(bot: Client, m: Message):
     await m.delete()
 
     await editable.edit(f"╭━━━━❰ᴇɴᴛᴇʀ ʀᴇꜱᴏʟᴜᴛɪᴏɴ❱━━➣ \n┣━━⪼ send `144`  for 144p\n┣━━⪼ send `240`  for 240p\n┣━━⪼ send `360`  for 360p\n┣━━⪼ send `480`  for 480p\n┣━━⪼ send `720`  for 720p\n┣━━⪼ send `1080` for 1080p\n╰━━⌈⚡[`{CREDIT}`]⚡⌋━━➣ ")
-    input2: Message = await bot.listen(editable.chat.id, filters=filters.text & filters.user(m.from_user.id))
+    input2_msg = await bot.listen(chat_id=editable.chat.id, filters=filters.text & filters.user(m.from_user.id))
+    if input2_msg is None:
+        await m.reply_text("**No input received. Please try again.**")
+        return
+    input2: Message = input2_msg
     raw_text2 = input2.text
     quality = f"{raw_text2}p"
     await input2.delete(True)
@@ -1548,8 +1554,11 @@ async def text_handler(bot: Client, m: Message):
     await editable.delete()
     raw_text4 = "working_token"
     thumb = "/d"
-    count =0
-    arg =1
+    count = 0
+    failed_count = 0
+    mpd = ""
+    keys_string = ""
+    arg = 1
     channel_id = m.chat.id
     try:
             Vxy = link.replace("file/d/","uc?export=download&id=").replace("www.youtube-nocookie.com/embed", "youtu.be").replace("?modestbranding=1", "").replace("/view?usp=sharing","")
@@ -1666,7 +1675,7 @@ async def text_handler(bot: Client, m: Message):
                     except Exception as e:
                         if attempt == max_retries - 1:  # Last attempt failed
                             # Send the final failure message if all retries fail
-                            await m.reply_text(f"Failed to download PDF after {max_retries} attempts.\n⚠️**Downloading Failed**⚠️\n**Name** =>> {str(count).zfill(3)} {name1}\n**Url** =>> {url}", disable_web_page_preview)
+                            await m.reply_text(f"Failed to download PDF after {max_retries} attempts.\n⚠️**Downloading Failed**⚠️\n**Name** =>> {str(count).zfill(3)} {name1}\n**Url** =>> {url}", disable_web_page_preview=True)
                         continue
             elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
                 try:
@@ -1678,7 +1687,7 @@ async def text_handler(bot: Client, m: Message):
                     os.remove(f'{name}.{ext}')
                 except FloodWait as e:
                     await m.reply_text(str(e))
-                    time.sleep(e.x)
+                    time.sleep(5)
                     pass
 
             elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
@@ -1692,7 +1701,7 @@ async def text_handler(bot: Client, m: Message):
                     os.remove(f'{name}.{ext}')
                 except FloodWait as e:
                     await m.reply_text(str(e))
-                    time.sleep(e.x)
+                    time.sleep(5)
                     pass
                                 
             elif url and 'encrypted.m' in url:    
@@ -1730,12 +1739,9 @@ async def text_handler(bot: Client, m: Message):
                 await helper.send_vid(bot, m, cc, filename, thumb, name, prog, channel_id)
                 time.sleep(1)
 
-        except Exception as e:
-            await m.reply_text(f"⚠️𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐢𝐧𝐠 𝐈𝐧𝐭𝐞𝐫𝐮𝐩𝐭𝐞𝐝\n\n🔗𝐋𝐢𝐧𝐤 » `{link}`\n\n<blockquote><b><i>⚠️Failed Reason »**__\n{str(e)}</i></b></blockquote>")
-            pass
-
     except Exception as e:
-        await m.reply_text(str(e))
+        await m.reply_text(f"⚠️𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐢𝐧𝐠 𝐈𝐧𝐭𝐞𝐫𝐮𝐩𝐭𝐞𝐝\n\n🔗𝐋𝐢𝐧𝐤 » `{link}`\n\n<blockquote><b><i>⚠️Failed Reason »**__\n{str(e)}</i></b></blockquote>")
+        pass
 
 #...............…........
 def notify_owner():
